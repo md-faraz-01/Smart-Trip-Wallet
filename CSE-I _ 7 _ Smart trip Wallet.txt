@@ -1,0 +1,2637 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Travel Planner</title>
+
+<style>
+
+  :root{
+
+    --bg:#0b1020; --card:#121933; --line:#2a3154; --muted:#aab3d1; --text:#eef2ff;
+
+    --brand:#6ee7b7; --brand-2:#60a5fa; --warn:#fbbf24; --danger:#fb7185;
+
+  }
+
+  *{box-sizing:border-box}
+
+  html,body{height:100%}
+
+  body{
+
+    margin:0; font-family: Inter, system-ui, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+
+    color:var(--text); background:linear-gradient(180deg,#0b1020,#11162c 40%,#0b1020);
+  }
+
+  a{color:inherit; text-decoration:none}
+
+  button{font:inherit}
+
+
+  .appbar{
+
+    position:sticky; top:0; z-index:20; display:flex; align-items:center; justify-content:space-between;
+
+    padding:12px 18px; background:#0e1430cc; backdrop-filter:blur(6px); border-bottom:1px solid var(--line);
+
+  }
+
+  .brand{font-weight:700; letter-spacing:.2px}
+
+  .secondary{color:var(--muted); font-size:13px}
+
+
+  .container{max-width:1100px; margin:0 auto; padding:20px 16px 60px}
+
+
+  /* ------- Cards / Panels ------- */
+
+  .card{
+
+    background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+
+    border:1px solid var(--line); border-radius:16px; padding:16px;
+
+  }
+
+  .section-title{font-weight:700; margin:0 0 8px}
+
+  .muted{color:var(--muted)}
+
+  .btn{
+
+    display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:12px; border:1px solid var(--line);
+
+    background:linear-gradient(135deg,#34d399,#10b981); color:#052012; font-weight:700; cursor:pointer;
+
+  }
+
+  .btn.secondary{background:linear-gradient(135deg,#60a5fa,#4f46e5); color:white}
+
+  .btn.ghost{background:transparent; color:var(--text)}
+
+  .btn.small{padding:6px 10px; border-radius:10px; font-weight:600}
+
+  input, select, textarea{
+
+    width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+
+    background:#0b143a; color:var(--text); outline:none;
+
+  }
+
+  label{display:block; font-size:13px; color:var(--muted); margin:8px 0 6px}
+
+  .row{display:grid; gap:12px}
+
+@media (min-width:800px){ .row.two{grid-template-columns:1fr 1fr} .row.three{grid-template-columns:1fr 1fr 1fr} }
+
+.pill{display:inline-block; padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.04); font-size:12px; margin:2px 6px 2px 0}
+
+
+/* ------- Views ------- */
+
+.view{display:none}
+
+.view.active{display:block}
+
+
+/* Start Screen */
+
+.trips-grid{display:grid; gap:14px}
+
+@media (min-width:760px){ .trips-grid{grid-template-columns: repeat(2, 1fr)} }
+
+.trip-item{display:flex; gap:12px; align-items:center; padding:12px; border:1px solid var(--line); border-radius:12px; background:#0d1536}
+
+.cover{width:56px; height:56px; border-radius:10px; background:#1b244d center/cover no-repeat}
+
+
+/* Tabs */
+
+.tabs{display:flex; gap:8px; border-bottom:1px solid var(--line); margin-bottom:12px; overflow:auto}
+
+.tab{padding:10px 12px; border-radius:10px 10px 0 0; cursor:pointer; color:var(--muted)}
+
+.tab.active{color:var(--text); background:#0d1536; border:1px solid var(--line); border-bottom:none}
+
+
+/* Itinerary days */
+
+.day{border-left:3px solid var(--brand); padding-left:12px; margin:10px 0}
+
+.budget-box{
+
+display:flex; gap:10px; align-items:center; padding:10px; border-radius:12px;
+
+background: rgba(34,197,94,0.12); border:1px dashed rgba(34,197,94,0.45); font-size:14px
+
+}
+
+.budget-box.warn{ background: rgba(245,158,11,0.12); border-color: rgba(245,158,11,0.55); }
+
+
+/* Modal */
+
+.modal{position:fixed; inset:0; background:rgba(2,6,23,.6); display:none; align-items:center; justify-content:center; z-index:50}
+
+.modal.show{display:flex}
+
+.modal-content{width:min(720px, 92vw); background:#0d1536; border:1px solid var(--line); border-radius:16px; padding:16px}
+
+.modal-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px}
+
+.list{display:grid; gap:10px}
+
+.place{display:flex; gap:10px; padding:10px; border:1px solid var(--line); border-radius:10px; background:#0b143a}
+
+
+/* Budget table */
+
+table{width:100%; border-collapse:collapse}
+
+th, td{border-bottom:1px solid var(--line); padding:10px; text-align:left}
+
+tfoot td{border-top:1px solid var(--line); font-weight:700}
+
+
+/* Map */
+
+.map{height:360px; border:1px solid var(--line); border-radius:12px; background:#0b143a}
+
+
+/* -------- AUTH (Login & Register) -------- */
+
+.auth-wrap{min-height:calc(100vh - 56px); display:grid; place-items:center}
+
+.auth-card{width:min(520px, 92vw)}
+
+.error{color:var(--danger); font-size:13px; margin-top:6px}
+
+.ok{color:var(--brand); font-size:13px; margin-top:6px}
+
+.appbar-right{display:flex; align-items:center; gap:10px}
+
+</style>
+
+
+<!-- Leaflet -->
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+</head>
+
+<body>
+
+
+<!-- App Bar -->
+
+<div class="appbar">
+
+<div class="brand" data-testid="brand-title">Travel Planner</div>
+
+<div class="appbar-right">
+
+<div class="secondary" id="welcomeUser" data-testid="welcome-user"></div>
+
+<button class="btn small ghost" id="logoutBtn" data-testid="logout-btn" style="display:none">Logout</button>
+
+<div class="secondary" id="clock" data-testid="clock">—</div>
+
+</div>
+
+</div>
+
+
+<div class="container">
+
+
+<!-- ========== AUTH (Login) ========== -->
+
+<section id="view-auth" class="view active">
+
+<div class="auth-wrap">
+
+<div class="card auth-card">
+
+<h2 class="section-title">Sign in</h2>
+
+<div class="muted">Enter your credentials to continue</div>
+
+
+<div class="row two" style="margin-top:8px">
+
+<div>
+
+<label>Username</label>
+
+<input id="loginUser" data-testid="login-user-input" placeholder="yourname">
+
+</div>
+
+<div>
+
+<label>Password</label>
+
+<input id="loginPass" data-testid="login-pass-input" type="password" placeholder="••••••••">
+
+</div>
+
+</div>
+
+
+<div id="loginMsg" class="error" data-testid="login-msg" style="display:none"></div>
+
+
+<div style="display:flex; gap:8px; margin-top:12px">
+
+<button class="btn" id="btnLogin" data-testid="btn-login">Sign in</button>
+
+<button class="btn secondary" id="btnOpenRegister" data-testid="btn-open-register">Create account</button>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- ========== Start Screen (My Trips) ========== -->
+
+<section id="view-start" class="view">
+
+<div class="card" style="margin-bottom:14px; display:flex; align-items:center; justify-content:space-between;">
+
+<div>
+
+<h2 class="section-title" style="margin-bottom:2px">Start Screen</h2>
+
+<div class="muted">My Trips</div>
+
+</div>
+
+<button class="btn" id="btnToCreate" data-testid="btn-to-create">+ Create Trip</button>
+
+</div>
+
+
+<div class="trips-grid" id="tripsList" data-testid="trips-list"></div>
+
+</section>
+
+
+<!-- ========== Create Trip ========== -->
+
+<section id="view-create" class="view">
+
+
+
+<!-- LIVE Hotels preview while creating trip -->
+
+<div class="card" id="createHotelsCard" style="margin-top:12px; display:none">
+
+<div class="section-title">Hotels (based on your budget)</div>
+
+<div class="muted" id="createHotelsMeta"></div>
+
+<div id="createHotelsList" class="list" style="margin-top:8px"></div>
+
+</div>
+
+
+<div class="card">
+
+<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px;">
+
+<h2 class="section-title">Create Trip</h2>
+
+<div style="display:flex; gap:8px">
+
+<button class="btn ghost" id="btnCancelCreate" data-testid="btn-cancel-create">Cancel</button>
+
+<button class="btn secondary" id="btnCreateTrip" data-testid="btn-create-trip">Create</button>
+
+</div>
+
+</div>
+
+
+<div class="row two">
+
+<div>
+
+<label>Trip name</label>
+
+<input id="tripName" data-testid="trip-name-input" placeholder="Trip to Mysore">
+
+</div>
+
+<div>
+
+<label>Itinerary (destination)</label>
+
+<input id="tripPlace" data-testid="trip-place-input" list="places" placeholder="e.g., Mysore / Hyderabad / Goa">
+
+<datalist id="places">
+
+<option value="Mysore"></option>
+
+<option value="Hyderabad"></option>
+
+<option value="Goa"></option>
+
+<option value="Delhi"></option>
+
+<option value="Jaipur"></option>
+
+<option value="Bengaluru"></option>
+
+</datalist>
+
+</div>
+
+</div>
+
+
+<div class="row three" style="margin-top:8px">
+
+<div>
+
+<label>Start Date</label>
+
+<input type="date" id="startDate" data-testid="start-date-input">
+
+</div>
+
+<div>
+
+<label>End Date</label>
+
+<input type="date" id="endDate" data-testid="end-date-input">
+
+</div>
+
+<div>
+
+<label>Time Zone</label>
+
+<select id="tz" data-testid="tz-select">
+
+<option value="Asia/Kolkata">Bengaluru, India (IST)</option>
+
+<option value="Asia/Dubai">Dubai (GST)</option>
+
+<option value="Europe/London">London (GMT)</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+<div class="row two" style="margin-top:8px">
+
+<div>
+
+<label>Cover Image URL</label>
+
+<input id="coverUrl" data-testid="cover-url-input" placeholder="https://images…">
+
+</div>
+
+<div>
+
+<label>Budget (₹ per person)</label>
+
+<input id="budget" data-testid="budget-input" type="number" min="0" placeholder="e.g., 15000">
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<!-- ========== Trip Screen ========== -->
+
+<section id="view-trip" class="view">
+
+<div class="card" id="tripHeader"></div>
+
+
+<div class="tabs" id="tabs">
+
+<div class="tab active" data-tab="overview" data-testid="tab-overview">Overview</div>
+
+<div class="tab" data-tab="itinerary" data-testid="tab-itinerary">Itinerary</div>
+
+<div class="tab" data-tab="explore" data-testid="tab-explore">Explore</div>
+
+<div class="tab" data-tab="notes" data-testid="tab-notes">Notes</div>
+
+<div class="tab" data-tab="budget" data-testid="tab-budget">Budget</div>
+
+<div class="tab" data-tab="map" data-testid="tab-map">Map</div>
+
+</div>
+
+
+<!-- OVERVIEW -->
+
+<div class="card tab-panel" id="tab-overview">
+
+<div class="budget-box" id="budgetCheck"></div>
+
+<div style="margin-top:10px">
+
+<div class="section-title">Places to Visit</div>
+
+<div id="placesList" class="list"></div>
+
+<button class="btn small" id="btnAddPlace">Add a place</button>
+
+<div style="margin-top:14px">
+
+<div class="section-title">Hotels to Stay</div>
+
+<div id="hotelsList" class="list"></div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ITINERARY -->
+
+<div class="card tab-panel" id="tab-itinerary" style="display:none">
+
+<div id="daysNav" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px"></div>
+
+<div id="itineraryDays"></div>
+
+</div>
+
+
+<!-- EXPLORE -->
+
+<div class="card tab-panel" id="tab-explore" style="display:none">
+
+<div class="section-title">Explore</div>
+
+<div class="muted" id="exploreHeader"></div>
+
+<div style="margin-top:10px">
+
+<div class="section-title">Categories</div>
+
+<div id="exploreCategories">
+  <button class="btn small ghost category-btn">Restaurants</button>
+  <button class="btn small ghost category-btn">Cafes</button>
+  <button class="btn small ghost category-btn">Cheap Rates</button>
+  <button class="btn small ghost category-btn">Travel</button>
+  <button class="btn small ghost category-btn">Video Guides</button>
+</div>
+
+</div>
+
+<div style="margin-top:12px">
+    <div class="section-title">Results</div>
+    <div id="exploreResults" class="list"></div>
+</div>
+
+</div>
+
+
+<!-- NOTES -->
+
+<div class="card tab-panel" id="tab-notes" style="display:none">
+
+<label>Notes</label>
+
+<textarea id="notes" rows="8" placeholder="Write or paste general notes here, e.g., how to get there…"></textarea>
+
+</div>
+
+
+<!-- BUDGET -->
+
+<div class="card tab-panel" id="tab-budget" style="display:none">
+
+<div style="display:flex; align-items:center; justify-content:space-between">
+
+<div>
+
+<div class="section-title" style="margin-bottom:2px">Set a budget</div>
+
+<div class="muted">Debt Summary • Expenses</div>
+
+</div>
+
+<div style="display:flex; gap:8px">
+
+<input id="budgetInput" type="number" min="0" placeholder="₹ 0" style="width:160px">
+
+<button class="btn small" id="btnSetBudget">Set</button>
+
+</div>
+
+</div>
+
+
+<div style="margin-top:12px">
+
+<table id="expensesTable">
+
+<thead>
+
+<tr><th>#</th><th>Category</th><th>Amount (₹)</th><th>Paid By</th><th></th></tr>
+
+</thead>
+
+</table>
+
+<table style="margin-top:-1px">
+
+<tbody></tbody>
+
+<tfoot><tr><td colspan="2">Total</td><td id="totalAmt">₹0</td><td colspan="2"></td></tr></tfoot>
+
+</table>
+
+
+<div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap">
+
+<select id="expCat" style="max-width:160px">
+
+<option>Activities</option>
+
+<option>Lodges</option>
+
+<option>Food</option>
+
+<option>Transport</option>
+
+<option>Tickets</option>
+
+</select>
+
+<input id="expAmt" type="number" placeholder="Amount" style="max-width:140px">
+
+<input id="expBy" placeholder="Paid by" style="max-width:180px">
+
+<button class="btn small" id="btnAddExpense">Add Expense</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- MAP -->
+
+<div class="card tab-panel" id="tab-map" style="display:none">
+
+<div class="section-title">Map</div>
+
+<div class="map" id="mapBox" title="Map"></div>
+
+</div>
+
+</section>
+
+</div>
+
+
+<!-- ========== Add Place Modal ========== -->
+
+<div class="modal" id="placeModal">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<div class="section-title">Add a Place</div>
+
+<button class="btn small ghost" id="closeModal">Close</button>
+
+</div>
+
+<div class="row two">
+
+<div>
+
+<label>Search</label>
+
+<input id="placeSearch" placeholder="Type to search…">
+
+</div>
+
+<div>
+
+<label>Category</label>
+
+<select id="placeCategory">
+
+<option value="">All</option>
+
+<option value="heritage">Heritage</option>
+
+<option value="museum">Museum</option>
+
+<option value="park">Park</option>
+
+<option value="temple">Temple</option>
+
+<option value="beach">Beach</option>
+
+</select>
+
+</div>
+
+</div>
+
+
+<div style="margin-top:10px">
+
+<div class="section-title">Places in your list</div>
+
+<div id="modalPlaces" class="list"></div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ========== Register Modal (Create Account) ========== -->
+
+<div class="modal" id="registerModal">
+
+<div class="modal-content" style="max-width:560px">
+
+<div class="modal-header">
+
+<div class="section-title">Create Account</div>
+
+<button class="btn small ghost" id="closeRegister" data-testid="close-register">Close</button>
+
+</div>
+
+
+<div class="row two">
+
+<div>
+
+<label>Username</label>
+
+<input id="regUser" data-testid="reg-user-input" placeholder="yourname">
+
+</div>
+
+<div>
+
+<label>Password</label>
+
+<input id="regPass" data-testid="reg-pass-input" type="password" placeholder="min 6 characters">
+
+</div>
+
+</div>
+
+<div style="margin-top:8px">
+
+<label>Confirm Password</label>
+
+<input id="regPass2" data-testid="reg-pass2-input" type="password" placeholder="repeat password">
+
+</div>
+
+<div id="regMsg" class="error" data-testid="reg-msg" style="display:none"></div>
+
+<div style="margin-top:10px; display:flex; gap:8px">
+
+<button class="btn secondary" id="btnRegister" data-testid="btn-register">Create account</button>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+//Clock (app bar)
+
+function tickClock() {
+  const d = new Date();
+
+  const pad = (n) => String(n).padStart(2, '0');
+
+  const hh = pad(d.getHours());   // ← added ()
+  const mm = pad(d.getMinutes()); // ← added ()
+
+  document.getElementById('clock').textContent = hh + ':' + mm;
+}
+
+setInterval(tickClock, 1000);
+tickClock(); // ← added ()
+
+//City knowledge base (with coords for Map)
+
+const DATA = {
+
+mysore: {
+
+cover: "https://www.tallengestore.com/cdn/shop/products/MysorePalace_Karnataka_LitUpForDasseraFestival-FamousPlaces.jpg?v=1694054765",
+
+inbound: ["Train (MYS)", "Flight (BLR, then road/rail)"],
+
+localTransport: ["Auto-rickshaw", "Cab"],
+
+dishes: ["Mysore Masala Dosa", "Mysore Pak", "Filter Coffee"],
+
+foods: [{name:"Vinayaka Mylari", tip:"Benne dose"}, {name:"Mahesh Prasad", tip:"South Indian meals"}],
+
+sights: [
+
+{ name:"Mysore Palace", slot:"morning", area:"Nazarbad", time:"2–3h", type:"heritage", lat:12.3052, lng:76.6552,
+
+img : "https://photographylife.com/wp-content/uploads/2015/07/DP2M0153c.jpg",
+
+},
+
+{ name:"Sri Chamarajendra Zoological Gardens", slot:"afternoon", area:"Ittige Gudu", time:"2–3h", type:"park", lat:12.3026, lng:76.6649,
+
+img : "https://adititravels.in/wp-content/uploads/2023/12/Sri-Chamarajendra-Zoological-Gardens.jpg",
+
+},
+
+{ name:"Brindavan Gardens (evening)", slot:"evening", area:"KRS", time:"2–3h", type:"park", lat:12.4226, lng:76.5725,
+
+img : "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/1d/1b/b7/ee/view-from-brindavan-gardens.jpg?w=700&h=-1&s=1",
+
+}
+
+],
+
+hotels: [
+
+{ name:"Hotel Roopa", tier:"budget", approx:1500, area:"Nazarbad", lat:12.3042, lng:76.6575,
+
+img : "https://hotelroopa.com/images/About-Us-img.jpg",
+
+},
+
+{ name:"Hotel MB International", tier:"budget", approx:1700, area:"Central", lat:12.3184807, lng:76.6597305,
+
+img : "https://media.weddingz.in/photologue/images/mb-international-doora-mysore.png",
+
+},
+
+{ name:"Treebo Trend Spectrum Suites", tier:"mid", approx:3200, area:"Jayalakshmipuram", lat:12.3219733, lng:76.6208390,
+
+img : "https://treebo-spektrum-suites.mysorehotelsweb.com/data/Pics/OriginalPhoto/9147/914711/914711701/treebo-trend-spektrum-suites-mysore-pic-4.JPEG",
+
+},
+
+{ name:"Southern Star Mysore", tier:"mid", approx:4500, area:"City Center",lat:12.3116421, lng:76.6432697,
+
+img : "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/73/19/27/southern-star-mysore.jpg?w=900&h=500&s=1"
+
+},
+
+{ name:"Radisson Blu Plaza", tier:"comfort", approx:6500, area:"MG Road", lat:12.3093, lng:76.6506,
+
+img : "https://ik.imgkit.net/3vlqs5axxjf/external/ik-seo/https://media.iceportal.com/114090/photos/72592553_XL/Radisson-Blu-Plaza-Hotel-Mysore-Pool.jpg?tr=w-780%2Ch-437%2Cfo-auto",
+
+},
+
+{ name:"Royal Orchid Metropole", tier:"comfort", approx:9000, area:"Jhansi Laxmi Bai Road", lat:12.3114669, lng:76.6440783,
+
+img : "https://r2imghtlak.ibcdn.com/r2-mmt-htl-image/htl-imgs/200701251224468296-8051c7bc12ae11e79e870a209fbd0127.jpg?&output-quality=75&downsize=336:168&crop=336:168;0,27&output-format=webp",
+
+}
+
+]
+
+},
+
+
+
+hyderabad: {
+
+cover: "https://s7ap1.scene7.com/is/image/incredibleindia/falaknuma-palace-hyderabad-telangana-2-attr-hero?qlt=82&ts=1742191813614",
+
+inbound: ["Train (Secunderabad/Hyderabad Deccan)", "Flight (HYD)"],
+
+localTransport: ["Metro", "Auto-rickshaw", "Cab (Ola/Uber)"],
+
+dishes: ["Hyderabadi Biryani", "Haleem (seasonal)", "Irani Chai & Osmania Biscuits", "Double ka Meetha"],
+
+foods: [
+
+{ name: "Bawarchi", tip: "Mutton biryani" },
+
+{ name: "Shah Ghouse", tip: "Haleem/Biryani" },
+
+{ name: "Nimrah Café", tip: "Irani chai & Osmania" },
+
+{ name: "Paradise", tip: "Classic biryani spot" },
+
+],
+
+sights: [
+
+{ name:"Charminar & Laad Bazaar", slot:"morning", area:"Old City", time:"2–3h", type:"heritage", lat:17.3616, lng:78.4747,
+
+img : "https://s7ap1.scene7.com/is/image/incredibleindia/charminar-hyderabad-2-attr-hero?qlt=82&ts=1742191257952",
+
+},
+
+{ name:"Salar Jung Museum", slot:"afternoon", area:"Old City", time:"2–3h", type:"museum", lat:17.3713, lng:78.4804,
+
+img : "https://upload.wikimedia.org/wikipedia/commons/a/ac/Salar_Jung_Museum%2C_Hyderabad%2C_India.jpg",
+
+},
+
+{ name:"Golconda Fort (sunset)", slot:"evening", area:"Golconda", time:"3h", type:"heritage", lat:17.3833, lng:78.4011,
+
+img : "https://www.indiatourismguide.in/wp-content/uploads/2017/11/Golconda-Fort.jpg",
+
+},
+
+{ name:"Qutb Shahi Tombs", slot:"morning", area:"Golconda", time:"2h", type:"heritage", lat:17.3945, lng:78.4037,
+
+img : "https://akm-img-a-in.tosshub.com/indiatoday/images/story/202408/qutb-shahi-021225341-16x9_0.jpg?VersionId=_19HpGhJHpnfVptAEwZRy2wlsnpy2zSI",
+
+},
+
+{ name:"Ramoji Film City (full day)", slot:"full", area:"Outskirts", time:"6–8h", type:"theme", lat:17.2543, lng:78.6808,
+
+img : "https://i0.wp.com/weekendyaari.in/wp-content/uploads/2024/09/weekend-yaari-ramoji-film-city-1.webp?fit=1921%2C1081&ssl=1",
+
+},
+
+{ name:"Hussain Sagar & Tank Bund", slot:"evening", area:"Necklace Road", time:"2h", type:"lake", lat:17.4239, lng:78.4738,
+
+img : "https://preview.redd.it/telangana-secretariat-and-statue-of-buddha-v0-hji4gwvpdowa1.jpg?width=640&crop=smart&auto=webp&s=ac3dfe9ff32dc1e86f8beaf8664ba0b8f9499fcb",
+
+},
+
+{ name:"Shilparamam", slot:"afternoon", area:"Hitech City", time:"2h", type:"crafts", lat:17.4501, lng:78.3821,
+
+img : "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/26/be/cd/da/inside-the-market-at.jpg?w=900&h=-1&s=1",
+
+},
+
+{ name:"Birla Mandir", slot:"evening", area:"Khairatabad", time:"1–2h", type:"temple", lat:17.4062, lng:78.4691,
+
+img : "https://kahanigram.com/wp-content/uploads/2025/11/Birla-Mandir-Hyderabad.png",
+
+},
+
+],
+
+
+
+hotels: [
+
+{ name: "OYO Collection O, Banjara Hills", tier:"budget", approx: 1800, area:"Banjara Hills",
+
+img : "https://images.oyoroomscdn.com/uploads/hotel_image/110830/small/lhdcnqfayucm.jpg",
+
+},
+
+{ name: "FabHotel Hitech City", tier:"budget", approx: 2200, area:"Hitech City",
+
+img : "https://cf.bstatic.com/xdata/images/hotel/max1024x768/754655069.jpg?k=a1f208f15ce0a9b2825b6d6e88a80bf0e05069e8257c82d3a4f5245d73c99276&o=",
+
+},
+
+{ name: "Treebo Trend Hotel Asrani", tier:"mid", approx: 3200, area:"Koti", lat:17.3926, lng:78.4867,
+
+img : "https://q-xx.bstatic.com/xdata/images/hotel/max500/498868255.jpg?k=868a733705f330bbff2780f46fdfceb461d52db5e57d433ed8c52eff768f1981&o=",
+
+},
+
+{ name: "Ibis HITEC City", tier:"mid", approx: 4200, area:"Hitech City", lat:17.4506, lng:78.3802,
+
+img : "https://r2imghtlak.mmtcdn.com/r2-mmt-htl-image/htl-imgs/201606271041077908-36269e0e904711eb89b40242ac110005.jpg",
+
+},
+
+{ name: "Novotel Hyderabad Convention Centre", tier:"comfort", approx: 7500, area:"HITEC/Hyderabad", lat:17.4695, lng:78.3726,
+
+img : "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/32/09/d3/e9/exterior.jpg?w=900&h=500&s=1",
+
+},
+
+{ name: "ITC Kohenur", tier:"comfort", approx: 11000, area:"Madhapur", lat:17.4487, lng:78.3840,
+
+img : "https://www.shapoorjipallonji.com//assets/Desktop/Projects/1440x490/itc-kohenur-1-1440x490.jpg",
+
+},
+
+{ name: "Taj Krishna", tier:"comfort", approx: 12000, area:"Banjara Hills", lat:17.4169, lng:78.4483,
+
+img : "https://gos3.ibcdn.com/7819143ebb7511ee9bb40a58a9feac02.jpg",
+
+}
+
+]
+
+},
+
+
+goa: {
+
+cover: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/33/fc/f0/goa.jpg?w=1200&h=700&s=1",
+
+inbound: ["Train (Madgaon/Thivim)", "Flight (GOX/GOI)"],
+
+localTransport: ["Scooter rental", "Taxi", "Pilot bikes"],
+
+dishes: ["Goan Fish Curry", "Prawn Balchão", "Bebinca", "Poi (bread)"],
+
+foods: [
+
+{ name:"Vinayak Family Restaurant", tip:"Seafood thali" },
+
+{ name:"Ritz Classic", tip:"Fish curry" },
+
+{ name:"Martin's Corner", tip:"Prawn balchão" },
+
+{ name:"Infantaria", tip:"Breakfast & bebinca" },
+
+],
+
+sights: [
+
+{ name:"Calangute & Baga Beaches", slot:"morning", area:"North Goa", time:"3h", type:"beach", lat:15.5442, lng:73.7551,
+
+img : "https://media.istockphoto.com/id/690209136/photo/beach-in-goa-india.jpg?s=612x612&w=0&k=20&c=WSxO7oYv30kxnAi2Wra8gmD0POW-EjPT4k7TfsYVnKc=",
+
+},
+
+{ name:"Fort Aguada", slot:"afternoon", area:"North Goa", time:"2h", type:"fort", lat:15.4920, lng:73.7731,
+
+img : "https://www.fabhotels.com/blog/wp-content/uploads/2019/06/Aguada-Fort_600.jpg",
+
+},
+
+{ name:"Basilica of Bom Jeys & Old Goa", slot:"morning", area:"Old Goa", time:"2–3h", type:"church",lat:15.5009, lng:73.9115,
+
+img : "https://www.hoteldekho.com/storage/img/tourattraction/1643775536j4mpwqggmuhuna82wkph5prgji2x_arch.jpg",
+
+},
+
+{ name:"Chapora Fort (sunset)", slot:"evening", area:"North Goa", time:"2h", type:"fort",lat:15.6062, lng:73.7364,
+
+img : "https://c7.alamy.com/comp/PR5FA9/green-views-of-vagator-beach-from-the-top-of-chapora-fort-goa-india-asia-vagator-beach-is-one-of-the-most-beautiful-beaches-in-north-goa-PR5FA9.jpg",
+
+},
+
+{ name:"Palolem Beach (full day)", slot:"full", area:"South Goa", time:"6h", type:"beach",lat:15.0100,lng:74.0232,
+
+img : "https://www.acroncandolimresortgoa.com/explore-goa/beaches-in-goa/palolem-beach/images/palolem-beach.jpg",
+
+},
+
+{ name:"Anjuna Flea Market (Wed)", slot:"afternoon", area:"Anjuna", time:"2h", type:"market",lat:15.5728,lng:73.7436,
+
+img : "https://cdn.abhibus.com/2024/06/Anjuna-Flea-Market-North-Goa.jpg",
+
+},
+
+],
+
+hotels: [
+
+{ name:"Windsor Bay", tier:"budget", approx:1800, area:"Calangute", lat:15.5461, lng:73.7550,
+
+img : "https://tse3.mm.bing.net/th/id/OIP.NbW_J5o0gpidouLZ2Rf9RQHaE8?pid=Api&P=0&h=180"
+
+},
+
+{ name:"Casa De Goa (budget rooms)", tier:"budget", approx:2500, area:"Calangute",lat:15.5385,lng:73.7618,
+  img: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/05/ec/98/9c/deluxe-poolside.jpg?w=800&h=-1&s=1"
+ },
+
+{ name:"Resort Terra Paraiso", tier:"mid", approx:4000, area:"Calangute",lat:15.5342, lng:73.7634,
+  img: "https://tse1.mm.bing.net/th/id/OIP.YuGTFriHP-o7WLv55pMVhAHaDg?pid=Api&P=0&h=180",
+ },
+
+{ name:"La Calypso Hotel", tier:"mid", approx:4800, area:"Baga",lat:15.5540, lng:73.7538,
+  img: "https://tse2.mm.bing.net/th/id/OIP.Om7f7PiPdlyjBup45q1nzAHaE8?pid=Api&P=0&h=180"
+ },
+
+{ name:"Taj Exotica", tier:"comfort", approx:14000, area:"Benaulim", lat:15.2487, lng:73.9222,
+  img: "http://www.blog.sagmart.com/wp-content/uploads/2015/07/Taj-Exotica-Goa-Resort-1024x683.jpg",
+ },
+
+{ name:"W Goa", tier:"comfort", approx:18000, area:"Vagator",lat:15.6001, lng:73.7351,
+  img: "https://tse1.mm.bing.net/th/id/OIP.LlBxB7G1oQUBLSabtPHtFgHaDt?pid=Api&P=0&h=180",
+ }
+
+]
+
+},
+
+
+delhi: {
+
+cover: "https://images.unsplash.com/photo-1587135941948-670b381f08ce?q=80&w=600&auto=format&fit=crop",
+
+inbound:["Train (NDLS/HNZM)", "Flight (DEL)"],
+
+localTransport:["Metro", "Auto-rickshaw", "Cabs"],
+
+dishes:["Chole Bhature", "Parathas", "Kebabs", "Jalebi"],
+
+foods:[
+
+{ name:"Karim's", tip:"Mughlai kebabs & curries" },
+
+{ name:"Sita Ram Diwan Chand", tip:"Chole bhature" },
+
+{ name:"Paranthe Wali Gali", tip:"Stuffed parathas" },
+
+{ name:"Old Famous Jalebi Wala", tip:"Jalebi" },
+
+],
+
+sights:[
+
+{ name:"Red Fort & Chandni Chowk", slot:"morning", area:"Old Delhi", time:"3h", type:"heritage" },
+
+{ name:"Jama Masjid", slot:"afternoon", area:"Old Delhi", time:"1–2h", type:"mosque" },
+
+{ name:"India Gate & Kartavya Path", slot:"evening", area:"Central", time:"1–2h", type:"landmark" },
+
+{ name:"Qutub Minar", slot:"morning", area:"Mehrauli", time:"2h", type:"UNESCO" },
+
+{ name:"Humayun's Tomb", slot:"afternoon", area:"Nizamuddin", time:"2h", type:"UNESCO" },
+
+{ name:"Lotus Temple or Akshardham", slot:"evening", area:"South/East", time:"2–3h", type:"temple" },
+
+],
+
+hotels: [
+
+{ name:"Hotel Hari Piorko", tier:"budget", approx:1700, area:"Paharganj", lat:28.6444, lng:77.2139 },
+
+{ name:"Hotel Ajanta", tier:"budget", approx:2000, area:"Near NDLS" },
+
+{ name:"Ginger Rail Yatri Niwas", tier:"mid", approx:3800, area:"Ajmere Gate" },
+
+{ name:"Bloomrooms @ Janpath", tier:"mid", approx:5200, area:"Janpath" },
+
+{ name:"The Park New Delhi", tier:"comfort", approx:9000, area:"Connaught Place", lat:28.6297, lng:77.2195 },
+
+{ name:"Taj Palace", tier:"comfort", approx:13000, area:"Chanakyapuri" }
+
+]
+
+},
+
+
+jaipur:{
+
+cover: "https://images.unsplash.com/photo-1587135941948-670b381f08ce?q=80&w=600&auto=format&fit=crop",
+
+inbound:["Train (JP)", "Flight (JAI)"],
+
+localTransport:["Auto-rickshaw", "Cabs"],
+
+dishes:["Dal Baati Churma", "Laal Maas", "Ghewar", "Pyaaz Kachori"],
+
+foods:[
+
+{ name:"Rawat Mishthan Bhandar", tip:"Pyaaz kachori" },
+
+{ name:"Spice Court", tip:"Laal maas" },
+
+{ name:"LMB", tip:"Ghewar" },
+
+],
+
+sights:[
+
+{ name:"Amber Fort", slot:"morning", area:"Amber", time:"3h", type:"fort" },
+
+{ name:"Jaigarh or Nahargarh Fort", slot:"afternoon", area:"Aravalli", time:"2–3h", type:"fort" },
+
+{ name:"Hawa Mahal & City Palace", slot:"morning", area:"Old City", time:"3h", type:"palace" },
+
+{ name:"Jantar Mantar", slot:"afternoon", area:"Old City", time:"1–2h", type:"observatory" },
+
+{ name:"Chokhi Dhani (evening cultural)", slot:"evening", area:"Outskirts", time:"3h", type:"cultural" },
+
+],
+
+hotels: [
+
+{ name:"Hotel Pearl Palace", tier:"budget", approx:1800, area:"Ajmer Road", lat:26.9114, lng:75.7938 },
+
+{ name:"Hotel Kalyan", tier:"budget", approx:1600, area:"Bani Park" },
+
+{ name:"Clarks Inn Suites", tier:"mid", approx:4200, area:"Tonk Road" },
+
+{ name:"Umaid Bhawan Heritage House", tier:"mid", approx:4500, area:"Bani Park" },
+
+{ name:"Trident Jaipur", tier:"comfort", approx:10000, area:"Amber Road", lat:26.9534, lng:75.8467 },
+
+{ name:"Rambagh Palace (Taj)", tier:"comfort", approx:35000, area:"Bhawani Singh Rd" }
+
+]
+
+},
+
+
+bengaluru:{
+
+cover: "https://images.unsplash.com/photo-1587135941948-670b381f08ce?q=80&w=600&auto=format&fit=crop",
+
+inbound:["Train (SBC/YPR)", "Flight (BLR)"],
+
+localTransport:["Metro", "BMTC buses", "Cabs"],
+
+dishes:["Benne Dose", "Bisi Bele Bath", "Filter Coffee", "Mangalorean Seafood"],
+
+foods:[
+
+{ name:"CTR", tip:"Crispy benne dose" },
+
+{ name:"MTR", tip:"Rava idli & meals" },
+
+{ name:"Airlines Hotel", tip:"Open-air dosa breakfast" },
+
+{ name:"Sagar/Empire", tip:"Late-night bites" },
+
+],
+
+sights:[
+
+{ name:"Lalbagh Botanical Garden", slot:"morning", area:"South", time:"2h", type:"park" },
+
+{ name:"Bangalore Palace", slot:"afternoon", area:"Central", time:"2h", type:"palace" },
+
+{ name:"Cubbon Park & Vidhana Soudha", slot:"evening", area:"Central", time:"park" },
+
+{ name:"Tipu Sultan's Summer Palace", slot:"morning", area:"Chamrajpet", time:"1–2h", type:"heritage" },
+
+{ name:"Church Street/Brigade Road", slot:"evening", area:"CBD", time:"2–3h", type:"hangout" },
+
+],
+
+hotels: [
+
+{ name:"Treebo Trend (various)", tier:"budget", approx:2200, area:"Majestic/Indiranagar" },
+
+{ name:"Zostel Bangalore", tier:"budget", approx:1800, area:"Indiranagar" },
+
+{ name:"Ginger Bangalore", tier:"mid", approx:3900, area:"Whitefield", lat:12.9856, lng:77.7466 },
+
+{ name:"Keys Select Hotel", tier:"mid", approx:4200, area:"Hosur Rd" },
+
+{ name:"Taj MG Road", tier:"comfort", approx:11000, area:"MG Road", lat:12.9726, lng:77.6197 },
+
+{ name:"ITC Gardenia", tier:"comfort", approx:15000, area:"Residency Road" }
+
+]
+
+}
+
+};
+
+const EXPLORE_DATA = {
+  mysore: {
+    restaurants: [
+      { name: "Vinayaka Mylari", desc: "Famous benne dosa" },
+      { name: "Mahesh Prasad", desc: "South Indian meals" }
+    ],
+    cafes: [
+      { name: "Depth N Green", desc: "Chill cafe vibes" },
+      { name: "Cafe Aramane", desc: "Near palace, good snacks" }
+    ],
+    cheap: [
+      { name: "Mysore Pak shops", desc: "₹50–₹150 sweets" },
+      { name: "Street dosa stalls", desc: "₹40–₹100" }
+    ],
+    travel: [
+      { name: "Auto", desc: "Short distances" },
+      { name: "Cab", desc: "City travel" }
+    ],
+    videos: [
+      { name: "Mysore Travel Guide", desc: "Explore city highlights" }
+    ]
+  },
+
+  hyderabad:{
+    restaurants: [
+      { name: "Bawarchi", desc: "Famous for biryani"},
+      { name: "4 Seasons", desc: "Biryani & Desserts"},
+      { name: "Cafe Niloufer", desc: "Tea & Snacks"}
+    ],
+
+    cafes: [
+      { name: "Roastery Coffee House", desc: "Chill vibes" },
+      { name: "Third Wave Coffee", desc: "Good coffee" },
+      { name: "Daily Rituals", desc: "Great food"}
+    ],
+
+    cheap: [
+      { name: "Street Shawarma", desc: "₹80–₹120" },
+      { name: "Irani Chai + Biscuit", desc: "₹50–₹100" }
+    ],
+
+    travel: [
+      { name: "Metro", desc: "Fast & cheap" },
+      { name: "Auto", desc: "Short distances" }
+    ],
+
+    videos: [
+    { name: "YouTube Guide", desc: "Watch travel videos" }
+    ]
+  },
+
+  goa: {
+    restaurants: [
+      { name: "Martin's Corner", desc: "Seafood & Goan dishes" },
+      { name: "Ritz Classic", desc: "Fish curry meals" }
+    ],
+    cafes: [
+      { name: "Infantaria", desc: "Breakfast & bakery" },
+      { name: "Cafe Chocolatti", desc: "Desserts & coffee" }
+    ],
+    cheap: [
+      { name: "Beach shacks", desc: "₹200–₹400 meals" },
+      { name: "Local thali spots", desc: "₹150–₹250" }
+    ],
+    travel: [
+      { name: "Scooter rental", desc: "Best way to explore" },
+      { name: "Taxi", desc: "Long distance travel" }
+    ],
+    videos: [
+      { name: "Goa Travel Guide", desc: "Beaches & nightlife" }
+    ]
+  },
+
+  delhi: {
+    restaurants: [
+      { name: "Karim's", desc: "Mughlai food" },
+      { name: "Sita Ram Diwan Chand", desc: "Chole bhature" }
+    ],
+    cafes: [
+      { name: "Cafe Lota", desc: "Modern Indian cafe" },
+      { name: "Blue Tokai", desc: "Specialty coffee" }
+    ],
+    cheap: [
+      { name: "Street momos", desc: "₹50–₹100" },
+      { name: "Chandni Chowk food", desc: "₹100–₹200" }
+    ],
+    travel: [
+      { name: "Metro", desc: "Fast & cheap" },
+      { name: "Auto", desc: "Short rides" }
+    ],
+    videos: [
+      { name: "Delhi Travel Guide", desc: "Food & heritage" }
+    ]
+  },
+
+  jaipur: {
+    restaurants: [
+      { name: "Spice Court", desc: "Laal Maas" },
+      { name: "LMB", desc: "Traditional sweets" }
+    ],
+    cafes: [
+      { name: "Tapri Central", desc: "Tea cafe vibes" },
+      { name: "Anokhi Cafe", desc: "Healthy & organic" }
+    ],
+    cheap: [
+      { name: "Pyaaz Kachori stalls", desc: "₹30–₹80" },
+      { name: "Street lassi", desc: "₹50–₹100" }
+    ],
+    travel: [
+      { name: "Auto", desc: "City travel" },
+      { name: "Cab", desc: "Comfort rides" }
+    ],
+    videos: [
+      { name: "Jaipur Travel Guide", desc: "Forts & culture" }
+    ]
+  },
+
+  bengaluru: {
+    restaurants: [
+      { name: "CTR", desc: "Benne dosa" },
+      { name: "MTR", desc: "South Indian meals" }
+    ],
+    cafes: [
+      { name: "Third Wave Coffee", desc: "Popular cafe chain" },
+      { name: "Airlines Hotel", desc: "Open-air breakfast" }
+    ],
+    cheap: [
+      { name: "Darshini hotels", desc: "₹50–₹150 meals" },
+      { name: "Street idli/dosa", desc: "₹30–₹80" }
+    ],
+    travel: [
+      { name: "Metro", desc: "Best for traffic" },
+      { name: "BMTC Bus", desc: "Cheap transport" }
+    ],
+    videos: [
+      { name: "Bangalore Travel Guide", desc: "City & nightlife" }
+    ]
+  }
+};
+
+const TIER_COST = { budget:1500, mid:3000, comfort:6000 };
+
+const INR = (n)=> new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR', maximumFractionDigits:0}).format(n);
+
+
+// ===== Hotels helpers =====
+
+function deriveTierFromBudget(totalBudget, days) {
+  totalBudget = Number(totalBudget) || 0;
+  days = Number(days) || 0;
+
+  if (totalBudget <= 0 || days <= 0) return null;
+
+  const perDay = totalBudget / days;
+
+  if (perDay < 2000) return 'budget';
+  if (perDay < 4000) return 'mid';
+  return 'comfort';
+}
+
+
+function currentHotelTier(){
+
+if (!currentTrip) return 'mid';
+
+const days = dayDiff(currentTrip.start, currentTrip.end);
+
+const byBudget = deriveTierFromBudget(Number(currentTrip.budget||0), days);
+
+return currentTrip.tier || byBudget || 'mid';
+
+}
+
+
+function hotelsForCity(cityKey, tier){
+return (DATA[cityKey]?.hotels || []).filter(h => h.tier === tier);
+}
+
+//AUTH & PERSISTENCE
+
+const STORAGE = {
+
+users: 'tp_users',
+
+session: 'tp_session',
+
+tripsPrefix: 'tp_trips_'
+
+};
+
+
+function norm(s){ return (s||'').toLowerCase().trim(); }
+
+function cap(s){ return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
+
+function loadUsers(){
+
+try { return JSON.parse(localStorage.getItem(STORAGE.users) || '{}'); }
+
+catch(e){ return {}; }
+
+}
+
+function saveUsers(users){
+
+localStorage.setItem(STORAGE.users, JSON.stringify(users));
+
+}
+
+function getSession(){
+
+try { return JSON.parse(localStorage.getItem(STORAGE.session) || 'null'); }
+
+catch(e){ return null; }
+
+}
+
+function setSession(username){
+
+localStorage.setItem(STORAGE.session, JSON.stringify({ username, at: Date.now() }));
+
+}
+
+function clearSession(){
+
+localStorage.removeItem(STORAGE.session);
+
+}
+
+
+async function sha256(text){
+
+if (window.crypto?.subtle) {
+
+const enc = new TextEncoder().encode(text);
+
+const buf = await crypto.subtle.digest('SHA-256', enc);
+
+return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+
+} else {
+
+return btoa(text);
+
+}
+
+}
+
+
+let trips = [];
+
+let currentTrip = null;
+
+function tripsKeyFor(username){ return STORAGE.tripsPrefix + norm(username); }
+
+function loadTrips(){
+
+const s = getSession(); if (!s) { trips = []; return; }
+
+try { trips = JSON.parse(localStorage.getItem(tripsKeyFor(s.username)) || '[]'); }
+
+catch(e){ trips = []; }
+
+renderTrips();
+
+}
+
+function saveTrips(){
+
+const s = getSession(); if (!s) return;
+
+localStorage.setItem(tripsKeyFor(s.username), JSON.stringify(trips));
+
+}
+
+
+function show(viewId){
+
+document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+
+document.getElementById(viewId).classList.add('active');
+
+}
+
+
+const tripsList = document.getElementById('tripsList');
+
+function fmtDate(d){ return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'long', year:'numeric' }); }
+
+function renderTrips() {
+
+  tripsList.innerHTML = '';
+
+  if (!trips.length) {
+
+    const el = document.createElement('div');
+
+    el.className = 'card';
+
+    el.innerHTML = '<div class="muted">No trips yet. Click "Create Trip".</div>';
+
+    tripsList.appendChild(el);
+
+    return;
+  }
+
+
+
+trips.forEach((t, i) => {
+
+  const cityCover = DATA[norm(t.place)]?.cover;
+
+  const coverUrl = cityCover || t.cover ||
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=600&auto=format&fit=crop";
+
+  const el = document.createElement('div');
+
+  el.className = 'trip-item';
+
+  el.setAttribute('data-testid', 'trip-item-' + i);
+
+  el.innerHTML = `
+    <div class="cover" style="background-image:url('${coverUrl}')"></div>
+    <div style="flex:1">
+      <div style="font-weight:700">${t.name}</div>
+      <div class="muted">${fmtDate(t.start)} - ${fmtDate(t.end)}</div>
+    </div>
+    <button class="btn small" data-open="${i}" data-testid="open-trip-${i}">Open</button>
+  `;
+
+ 
+  el.querySelector('button').onclick = () => openTrip(i);
+
+  tripsList.appendChild(el);
+
+});
+}
+
+document.getElementById('btnToCreate').onclick = () => show('view-create');
+
+document.getElementById('btnCancelCreate').onclick = () => show('view-start');
+
+
+document.getElementById('btnCreateTrip').onclick = () => {
+
+  const name = document.getElementById('tripName').value || 'New Trip';
+
+  const place = document.getElementById('tripPlace').value || 'Your City';
+
+  const startInput = document.getElementById('startDate').value;
+  const endInput   = document.getElementById('endDate').value;
+
+  const start = startInput ? new Date(startInput + "T00:00:00") : new Date();
+  const end   = endInput ? new Date(endInput + "T00:00:00") : new Date();    
+
+
+
+
+if (end < start){
+
+alert('End date cannot be earlier than start date.');
+
+return;
+
+}
+
+
+
+
+  const tz = document.getElementById('tz').value;
+  const cover = document.getElementById('coverUrl').value;
+  const budget = Number(document.getElementById('budget').value || 0);
+
+  const trip = { name, place, start, end, tz, cover, budget, notes:'', expenses:[], tier:'mid' };
+
+  trips.push(trip);
+
+  saveTrips();
+  renderTrips();
+  openTrip(trips.length - 1);
+
+};
+
+
+
+
+function renderCreateHotels(){
+
+const cityKey = (document.getElementById('tripPlace').value || '').toLowerCase().trim();
+
+const budgetVal = Number(document.getElementById('budget').value || 0);
+
+
+const card = document.getElementById('createHotelsCard');
+
+const meta = document.getElementById('createHotelsMeta');
+
+const list = document.getElementById('createHotelsList');
+
+if (!cityKey || !DATA[cityKey]?.hotels?.length){
+
+card.style.display = 'none';
+
+list.innerHTML = '';
+
+return;
+
+}
+
+
+const startInput = document.getElementById('startDate').value;
+
+const endInput   = document.getElementById('endDate').value;
+
+let ds = 2;
+
+if (startInput && endInput) {
+
+const s = new Date(startInput), e = new Date(endInput);
+
+ds = Math.max(1, Math.round((e - s)/(1000*60*60*24))+1);
+
+}
+
+const tier = deriveTierFromBudget(budgetVal, ds) || 'mid';
+
+const hotels = hotelsForCity(cityKey, tier).slice(0,3);
+
+
+meta.textContent = `City: ${cityKey.charAt(0).toUpperCase()+cityKey.slice(1)} • Tier: ${tier.toUpperCase}${budgetVal?` • Budget: ₹${budgetVal.toLocaleString('en-IN')}`:''}`;
+
+list.innerHTML = hotels.length ? hotels.map(h => `
+
+<div class="place">
+
+<img
+
+src="${h.img || 'https://via.placeholder.com/100x70'}"
+
+style="width:100px;height:70px;object-fit:cover;border-radius:8px"
+
+>
+
+<div style="flex:1">
+
+<div style="font-weight:700">🏨 ${h.name}</div>
+
+<div class="muted">${h.area || ''}</div>
+
+</div>
+
+<span class="pill">~₹${(h.approx||0).toLocaleString('en-IN')}</span>
+
+</div>
+
+`).join('') : `<div class="muted">No hotels found for that tier. Try adjusting your budget.</div>`;
+
+
+card.style.display = 'block';
+
+}
+
+
+['tripPlace','budget','startDate','endDate'].forEach(id=>{
+
+const el = document.getElementById(id);
+
+el && el.addEventListener('input', renderCreateHotels);
+
+});
+
+
+function openTrip(index){
+
+currentTrip = trips[index];
+
+show('view-trip');
+
+renderTripHeader();
+
+buildAndRenderPlan();
+
+selectTab('overview');
+
+renderBudgetTable();
+
+renderExplore();
+
+}
+
+
+function renderTripHeader(){
+
+const t = currentTrip;
+
+const el = document.getElementById('tripHeader');
+
+el.innerHTML = `
+
+<div style="display:flex; align-items:center; justify-content:space-between; gap:8px">
+
+<div>
+
+<div style="font-weight:800; font-size:20px">${t.name}</div>
+
+<div class="muted">${fmtDate(t.start)} - ${fmtDate(t.end)}</div>
+
+</div>
+
+<div style="display:flex; gap:8px; align-items:center">
+
+<select id="tierSelect" data-testid="tier-select">
+
+<option value="budget"${t.tier==='budget'?' selected':''}>Budget</option>
+
+<option value="mid"${t.tier==='mid'?' selected':''}>Moderate</option>
+
+<option value="comfort"${t.tier==='comfort'?' selected':''}>Comfort/Luxury</option>
+
+</select>
+
+<button class="btn small" id="shareBtn" data-testid="share-btn">Share</button>
+
+<button class="btn small ghost" id="backBtn" data-testid="back-btn">Back</button>
+
+</div>
+
+</div>
+
+`;
+
+document.getElementById('backBtn').onclick = () => show('view-start');
+
+document.getElementById('tierSelect').onchange = (e)=>{ currentTrip.tier=e.target.value; buildAndRenderPlan(); saveTrips(); };
+
+document.getElementById('shareBtn').onclick = () => alert('Share link copied (demo)');
+
+}
+
+
+function dayDiff(start,end){ return Math.max(1, Math.round((new Date(end) - new Date(start))/(1000*60*60*24))+1 );}
+
+function buildPlan(cityKey, days){
+
+const city = DATA[cityKey] || null;
+
+if (!city){
+
+const genericSights = [
+
+{ name:"Old Town walking tour", slot:"morning", time:"2–3h"},
+
+{ name:"City Museum / Gallery", slot:"afternoon", time:"2h"},
+
+{ name:"Popular market & local street food", slot:"evening", time:"2h"},
+
+{ name:"Central park or viewpoint", slot:"morning", time:"2h"},
+
+{ name:"Day trip to nearby attraction", slot:"full", time:"6–8h"},
+
+];
+
+return {
+
+city:null,
+
+daily:Array.from({length:days},(_,i)=>{
+
+const d=i+1;
+
+if (days>=3 && d===Math.ceil(days/2)){
+
+return { day:d, morning:genericSights[4], afternoon:{name:"Local café / brunch", time:"Flexible"}, evening:{name:"Night market", time:"2h"} };
+
+}
+
+return { day:d, morning:genericSights[0], afternoon:genericSights[1], evening:genericSights[2] };
+
+})
+
+};
+
+}
+
+const pool = [...city.sights];
+
+const pick = (slot)=>{
+
+const idx = pool.findIndex(x=>x.slot===slot);
+
+if (idx>-1) return pool.splice(idx,1)[0];
+
+return pool.length ? pool.splice(0,1)[0] : { name:"Free time", slot, time:"Flexible" };
+
+};
+
+const daysArr = [];
+
+for (let d=1; d<=days; d++){
+
+if (pool.find(p=>p.slot==='full') && days>=3 && d===Math.ceil(days/2)){
+
+const fullIndex = pool.findIndex(p=>p.slot==='full');
+
+const fullItem = pool.splice(fullIndex,1)[0];
+
+daysArr.push({ day:d, morning:fullItem, afternoon:{name:"Leisure / Café break", time:"Flexible"}, evening:{name:"Easy evening stroll / shopping", time:"1–2h"} });
+
+} else {
+
+daysArr.push({ day:d, morning:pick('morning'), afternoon:pick('afternoon'), evening:pick('evening') });
+
+}
+
+}
+
+return { city, daily:daysArr };
+
+}
+
+
+function buildAndRenderPlan(){
+
+const t = currentTrip;
+
+const cityKey = norm(t.place);
+
+const days = dayDiff(t.start, t.end);
+
+t.plan = buildPlan(cityKey, days);
+
+renderOverview(days);
+
+renderItinerary(days);
+
+renderBudgetCheck(days);
+
+}
+
+
+document.querySelectorAll('.tab').forEach(tab=>{
+
+tab.onclick = () => selectTab(tab.dataset.tab);
+
+});
+
+function selectTab(key){
+
+document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===key));
+
+document.querySelectorAll('.tab-panel').forEach(p=>p.style.display='none');
+
+document.getElementById('tab-'+key).style.display='block';
+
+
+if (key === 'map') {
+
+ensureMap();
+
+plotTripOnMap();
+
+}
+
+}
+
+
+function renderOverview(days){
+
+const list = document.getElementById('placesList');
+
+const city = currentTrip.plan.city;
+
+const items = city?.sights || [];
+
+
+list.innerHTML = items.map(p => `
+
+<div class="place">
+
+<img
+
+src="${p.img || 'https://images.unsplash.com/featured/?tourist,place'}"
+
+style="width:120px;height:90px;object-fit:cover;border-radius:8px"
+
+>
+
+<div style="flex:1">
+
+<div style="font-weight:700">${p.name}</div>
+
+<div class="muted">${p.area || ''} • ${p.time || ''}</div>
+
+</div>
+
+<span class="pill">${p.slot || ''}</span>
+
+</div>
+
+`).join('');
+
+
+const hotelsBox = document.getElementById('hotelsList');
+
+if (!hotelsBox) return;
+
+
+const cityKey = norm(currentTrip.place);
+
+const tier = currentTrip.tier || 'mid';
+
+const hotels = (DATA[cityKey]?.hotels || []).filter(h => h.tier === tier);
+
+
+hotelsBox.innerHTML = hotels.length
+
+? hotels.map(h => `
+
+<div class="place">
+
+<img
+
+src="${h.img || 'https://images.unsplash.com/featured/?hotel,room'}"
+
+style="width:120px;height:90px;object-fit:cover;border-radius:8px"
+
+>
+
+<div style="flex:1">
+
+<div style="font-weight:700">🏨 ${h.name}</div>
+
+<div class="muted">${h.area || ''}</div>
+
+</div>
+
+<span class="pill">~₹${(h.approx||0).toLocaleString('en-IN')}</span>
+
+</div>
+
+`).join('')
+
+: `<div class="muted">No hotels found for this tier.</div>`;
+
+}
+
+
+function renderBudgetCheck(days){
+
+const tier = currentTrip.tier || 'mid';
+
+const estTotal = TIER_COST[tier] * days;
+
+const hasBudget = Number(currentTrip.budget||0)>0;
+
+const ok = !hasBudget || currentTrip.budget>=estTotal;
+
+const msg = !hasBudget
+
+? `Estimated total: ${INR(estTotal)} (set a budget for a fit check)`
+
+: (ok ? `Good! Your budget of ${INR(currentTrip.budget)} covers ~${INR(estTotal)}.`
+
+: `Your budget of ${INR(currentTrip.budget)} is ~${INR(estTotal - currentTrip.budget)} short of the estimate (${INR(estTotal)}).`);
+
+const box = document.getElementById('budgetCheck');
+
+box.className = 'budget-box'+(ok?'':' warn');
+
+box.textContent = 'Budget check: '+msg;
+
+}
+
+
+function renderItinerary(days){
+
+const nav = document.getElementById('daysNav');
+
+const wrap = document.getElementById('itineraryDays');
+
+nav.innerHTML = ''; wrap.innerHTML='';
+
+for (let d=1; d<=days; d++){
+
+const btn = document.createElement('button');
+
+btn.className='btn small ghost';
+
+btn.textContent = dateLabel(currentTrip.start, d-1);
+
+btn.onclick = () => scrollToDay(d);
+
+nav.appendChild(btn);
+
+
+const day = currentTrip.plan.daily[d-1] || {};
+
+const el = document.createElement('div');
+
+el.className='day';
+
+el.id = 'day-'+d;
+
+el.innerHTML = `
+
+<div style="font-weight:800">${dateLabel(currentTrip.start, d-1)}</div>
+
+<div>1. Morning — ${day.morning?.name||'-'} <span class="pill">${day.morning?.time||''}</span></div>
+
+<div>2. Afternoon — ${day.afternoon?.name||'-'} <span class="pill">${day.afternoon?.time||''}</span></div>
+
+<div>3. Evening — ${day.evening?.name||'-'} <span class="pill">${day.evening?.time||''}</span></div>
+
+<button class="btn small" style="margin-top:8px" onclick="openPlaceModal(${d})">Add a place</button>
+
+`;
+
+wrap.appendChild(el);
+
+}
+
+}
+
+function dateLabel(startDate, addDays){
+
+const d = new Date(startDate); d.setDate(d.getDate()+addDays);
+
+return d.toLocaleDateString('en-GB',{ day:'2-digit', month:'long' });
+
+}
+
+function scrollToDay(n){
+
+document.getElementById('day-'+n)?.scrollIntoView({behavior:'smooth', block:'start'});
+
+}
+
+
+function renderExplore(){
+
+  document.addEventListener('click', function(e){
+  if(!e.target.classList.contains('category-btn')) return;
+
+  document.querySelectorAll('.category-btn')
+    .forEach(btn => btn.classList.remove('active'));
+  e.target.classList.add('active');
+
+  const category = e.target.textContent.toLowerCase();
+  const cityKey = norm(currentTrip.place);
+  const resultsBox = document.getElementById('exploreResults');
+
+  const cityData = EXPLORE_DATA[cityKey];
+
+  if (!cityData){
+    resultsBox.innerHTML = `<div class="muted">No data available for this city.</div>`;
+    return;
+  }
+
+  let key = '';
+
+  if (category.includes('restaurant')) key = 'restaurants';
+  else if (category.includes('cafe')) key = 'cafes';
+  else if (category.includes('cheap')) key = 'cheap';
+  else if (category.includes('travel')) key = 'travel';
+  else if (category.includes('video')) key = 'videos';
+
+  const data = cityData[key];
+
+  if (!data || !data.length){
+    resultsBox.innerHTML = `<div class="muted">No data found.</div>`;
+    return;
+  }
+
+  let html = data.map(item => `
+    <div class="place">
+      <div style="flex:1">
+        <div style="font-weight:700">${item.name}</div>
+        <div class="muted">${item.desc}</div>
+      </div>
+    </div>
+  `).join('');
+
+  resultsBox.innerHTML = html;
+});
+
+const t = currentTrip;
+
+const city = norm(t.place);
+
+const cityData = DATA[city] || null;
+
+const el = document.getElementById('exploreHeader');
+
+if (cityData){
+
+el.innerHTML = `
+
+Getting there: ${cityData.inbound.join(', ')}<br>
+
+Local transport: ${cityData.localTransport.join(', ')}<br>
+
+Foods to try: ${(cityData.dishes||[]).join(', ')}
+
+`;
+
+} else {
+
+el.textContent = 'General tips: use trains/flights to reach; local cabs/metro/buses within city.';
+
+}
+
+}
+
+
+document.getElementById('notes').addEventListener('input', (e)=>{
+
+if (currentTrip) { currentTrip.notes = e.target.value; saveTrips(); }
+
+});
+
+
+function renderBudgetTable(){
+
+const tbody = document.querySelector('#expensesTable + table tbody');
+
+tbody.innerHTML = '';
+
+let total = 0;
+
+currentTrip.expenses.forEach((x,i)=>{
+
+total += x.amount;
+
+const tr = document.createElement('tr');
+
+tr.innerHTML = `<td>${i+1}</td><td>${x.cat}</td><td>₹${x.amount}</td><td>${x.by||'-'}</td>
+
+<td><button class="btn small ghost" onclick="removeExpense(${i})">Remove</button></td>`;
+
+tbody.appendChild(tr);
+
+});
+
+document.getElementById('totalAmt').textContent = INR(total);
+
+}
+
+function removeExpense(i){
+
+currentTrip.expenses.splice(i,1);
+
+renderBudgetTable(); saveTrips();
+
+}
+
+document.getElementById('btnAddExpense').onclick = () => {
+
+const cat = document.getElementById('expCat').value;
+
+const amt = Number(document.getElementById('expAmt').value||0);
+
+const by  = document.getElementById('expBy').value;
+
+if (!amt) return;
+
+currentTrip.expenses.push({cat, amount:amt, by});
+
+document.getElementById('expAmt').value='';
+
+document.getElementById('expBy').value='';
+
+renderBudgetTable(); saveTrips();
+
+};
+
+document.getElementById('btnSetBudget').onclick = () =>{
+
+currentTrip.budget = Number(document.getElementById('budgetInput').value||0);
+
+renderBudgetCheck(dayDiff(currentTrip.start, currentTrip.end)); saveTrips();
+
+};
+
+
+const modal = document.getElementById('placeModal');
+
+function openPlaceModal(dayNum){
+
+modal.classList.add('show');
+
+renderModalPlaces();
+
+modal.dataset.day = dayNum || '';
+
+}
+
+document.getElementById('closeModal').onclick = () => modal.classList.remove('show');
+
+document.getElementById('placeSearch').addEventListener('input', renderModalPlaces);
+
+document.getElementById('placeCategory').addEventListener('change', renderModalPlaces);
+
+
+function renderModalPlaces(){
+
+const holder = document.getElementById('modalPlaces');
+
+const q = norm(document.getElementById('placeSearch').value);
+
+const cat = document.getElementById('placeCategory').value;
+
+const cityKey = norm(currentTrip.place);
+
+const pool = (DATA[cityKey]?.sights || []).filter(p=>{
+
+const matchesQ = !q || norm(p.name).includes(q);
+
+const matchesC = !cat || p.type===cat;
+
+return matchesQ && matchesC;
+
+});
+
+if (!pool.length){
+
+holder.innerHTML = '<div class="muted">No matches. Try another search or category.</div>';
+
+return;
+
+}
+
+holder.innerHTML = '';
+
+pool.forEach((p,idx)=>{
+
+const el = document.createElement('div');
+
+el.className='place';
+
+el.innerHTML = `
+
+<div style="flex:1"><div style="font-weight:700">${p.name}</div>
+
+<div class="muted">${p.type||''} • ${p.area||''} • ${p.time||''}</div></div>
+
+<button class="btn small" data-add="${idx}">Add</button>`;
+
+el.querySelector('button').onclick = () => addPlaceFromModal(p);
+
+holder.appendChild(el);
+
+});
+
+}
+
+function addPlaceFromModal(place){
+
+const d = Number(document.getElementById('placeModal').dataset.day || '0');
+
+if (d && currentTrip?.plan?.daily?.[d-1]) {
+
+currentTrip.plan.daily[d-1].evening = place;
+
+renderItinerary(dayDiff(currentTrip.start, currentTrip.end));
+
+}
+
+modal.classList.remove('show'); saveTrips();
+
+}
+
+
+let map;
+
+let mapMarkers = [];
+
+
+function ensureMap (){
+
+if (map) {
+
+map.invalidateSize();
+
+return;
+
+}
+
+
+map = L.map("mapBox").setView([20.5937, 78.9629], 5);
+
+
+L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+  attribution: "&copy; OpenStreetMap &copy; CartoDB"
+}).addTo(map);
+
+}
+
+
+async function geocodePlace(query) {
+try {
+const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+
+const res = await fetch(url, {
+headers: {
+'Accept-Language': 'en'
+}
+});
+
+const data = await res.json();
+
+if (data && data.length > 0) {
+return {
+lat: parseFloat(data[0].lat),
+lng: parseFloat(data[0].lon)
+};
+}
+
+return null;
+} catch (err) {
+console.error("Geocoding error:", err);
+return null;
+}
+}
+
+
+async function plotTripOnMap() {
+
+if (!map || !currentTrip) return;
+
+
+mapMarkers.forEach(m => map.removeLayer(m));
+
+mapMarkers = [];
+
+
+const cityKey = norm(currentTrip.place);
+
+const city = DATA[cityKey];
+
+if (!city) return;
+
+
+const bounds = [];
+
+
+(city.sights || []).forEach(p => {
+
+if (!p.lat || !p.lng) return;
+
+
+const marker = L.marker([p.lat, p.lng]).addTo(map);
+
+marker.bindPopup(`
+
+<div style="width:160px">
+
+<img src="${p.img}"
+
+style="width:100%;height:90px;object-fit:cover;border-radius:6px">
+
+<b>${p.name}</b><br>
+
+<small>${p.area || ""}</small>
+
+</div>
+
+`);
+
+
+mapMarkers.push(marker);
+
+bounds.push([p.lat, p.lng]);
+
+});
+
+
+for (const h of (city.hotels || [])) {
+
+let lat = h.lat;
+let lng = h.lng;
+
+if (typeof lat !== 'number' || typeof lng !== 'number') {
+const result = await geocodePlace(h.name + " " + (cityKey || ""));
+if (result) {
+lat = result.lat;
+lng = result.lng;
+} else {
+continue;
+}
+}
+
+const marker = L.marker([lat, lng]).addTo(map);
+
+marker.bindPopup(`
+<div style="width:160px">
+<img src="${h.img || 'https://via.placeholder.com/160x90'}"
+style="width:100%;height:90px;object-fit:cover;border-radius:6px">
+<b>🏨 ${h.name}</b><br>
+<small>${h.area || ""}</small>
+</div>
+`);
+
+mapMarkers.push(marker);
+bounds.push([lat, lng]);
+}
+
+
+if (bounds.length) {
+
+map.fitBounds(bounds, { padding: [40, 40] });
+
+}
+
+}
+
+
+const loginMsg = document.getElementById('loginMsg');
+
+const regMsg = document.getElementById('regMsg');
+
+const welcomeUser = document.getElementById('welcomeUser');
+
+const logoutBtn = document.getElementById('logoutBtn');
+
+
+function setWelcome(username){
+
+welcomeUser.textContent = username ? `Welcome, ${username}` : '';
+
+logoutBtn.style.display = username ? '' : 'none';
+
+}
+
+
+document.getElementById('btnLogin').onclick = async () =>{
+
+loginMsg.style.display = 'none';
+
+const u = document.getElementById('loginUser').value.trim();
+
+const p = document.getElementById('loginPass').value;
+
+
+if (!u || !p){
+
+loginMsg.textContent = 'Please enter both username and password.';
+
+loginMsg.style.display = 'block';
+
+return;
+
+}
+
+
+const users = loadUsers();
+
+const key = norm(u);
+
+const userRow = users[key];
+
+if (!userRow){
+
+loginMsg.textContent = 'Account not found. Click "Create account".';
+
+loginMsg.style.display = 'block';
+
+return;
+
+}
+
+const h = await sha256(p);
+
+if (h !== userRow.pass){
+
+loginMsg.textContent = 'Incorrect password.';
+
+loginMsg.style.display = 'block';
+
+return;
+
+}
+
+
+setSession(userRow.username);
+
+setWelcome(userRow.username);
+
+loadTrips();
+
+show('view-start');
+
+};
+
+
+document.getElementById('btnOpenRegister').onclick = ()=>{
+
+document.getElementById('registerModal').classList.add('show');
+
+regMsg.style.display = 'none';
+
+};
+
+document.getElementById('closeRegister').onclick = ()=>{
+
+document.getElementById('registerModal').classList.remove('show');
+
+};
+
+
+document.getElementById('btnRegister').onclick = async () =>{
+
+regMsg.style.display = 'none';
+
+const u = document.getElementById('regUser').value.trim();
+
+const p = document.getElementById('regPass').value;
+
+const p2= document.getElementById('regPass2').value;
+
+
+if (!u || !p || !p2){
+
+regMsg.textContent = 'Please fill all fields.'; regMsg.style.display = 'block'; return;
+
+}
+
+if (p.length < 6){
+
+regMsg.textContent = 'Password must be at least 6 characters.'; regMsg.style.display = 'block'; return;
+
+}
+
+if (p !== p2){
+
+regMsg.textContent = 'Passwords do not match.'; regMsg.style.display = 'block'; return;
+
+}
+
+
+const users = loadUsers();
+
+const key = norm(u);
+
+if (users[key]){
+
+regMsg.textContent = 'Username is already taken.'; regMsg.style.display = 'block'; return;
+
+}
+
+
+const h = await sha256(p);
+
+users[key] = { username: u, pass: h, createdAt: Date.now() };
+
+saveUsers(users);
+
+
+setSession(u);
+
+setWelcome(u);
+
+loadTrips();
+
+document.getElementById('registerModal').classList.remove('show');
+
+show('view-start');
+
+};
+
+
+logoutBtn.onclick =() =>{
+
+clearSession();
+
+setWelcome('');
+
+show('view-auth');
+
+};
+
+
+function boot(){
+
+const sess = getSession();
+
+if (sess?.username){
+
+setWelcome(sess.username);
+
+loadTrips();
+
+show('view-start');
+
+} else {
+
+setWelcome('');
+
+show('view-auth');
+
+}
+
+}
+
+boot();
+
+
+</script>
+
+</body>
+
+</html>
